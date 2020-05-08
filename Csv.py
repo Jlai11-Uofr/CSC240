@@ -1,3 +1,4 @@
+#Property of Jonathan Lai
 import csv
 from m3inference import M3Inference
 from m3inference import M3Twitter
