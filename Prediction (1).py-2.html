@@ -1,0 +1,989 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
+from sklearn.feature_selection import SelectKBest, f_regression
+from sklearn.svm import SVC, LinearSVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+import numpy as np
+from matplotlib import pyplot as plt
+
+
+# In[34]:
+
+
+# overide the classifier with my_X attributes
+
+max_len = 5
+
+def predict_A_rule(lemma,filter_list):
+    count = 0
+    lemma = lemma.split(' ')
+    #pos = pos.split(' ')
+    my_idx = [i for i in range(len(lemma)) if lemma[i]=='my']
+    for i in my_idx:
+        for j in range(i+1, min(i+max_len-1,len(lemma))):
+            if lemma[j] in filter_list:
+                count += 1
+    if count >= 2:
+        return 1
+    else:
+        return 0
+
+
+# In[36]:
+
+
+filters = open('/Users/jonathanlai/Downloads/my_X_relations_custom.txt', 'r').readlines()
+filter_list = [f.split('\t')[0] for f in filters if float(f.split('\t')[1])>0.5]
+print(len(filter_list))
+print(filter_list[:105])
+
+
+# In[ ]:
+
+
+
+
+
+# In[125]:
+
+
+
+bs_label_data = [0,0,0,1]
+
+bs_tweet_data = ["I love college! ",'College is great!',"I go to college1",'Fuck']
+
+bs_model.fit(bs_tweet_data, bs_label_data)
+
+bs_prediction = bs_model.predict(['College is great','fuck'])
+bs_prediction
+
+
+# In[17]:
+
+
+bs_prediction_arule = []
+
+for i in range(len(tweet_test)):
+    bs_prediction_arule.append(max(predict_A_rule(tweet_test[i]['text'], filter_list), bs_prediction[i]))
+
+
+# In[ ]:
+
+
+tweet_data = []
+label_data = []
+
+for user in labeled_users:
+    lemma = ' '.join([t['lemma'] for t in user['tweets']])
+    pos = ' '.join([t['pos'] for t in user['tweets']])
+    tweets = {'lemma':lemma, 'pos':pos}
+    tweet_data.append(tweets)
+    label_data.append(user['is_student'])
+    
+    
+
+
+# In[ ]:
+
+
+tweet_train, tweet_test, label_train, label_test = train_test_split(tweet_data, label_data, test_size=0.2, random_state=42)
+
+
+# In[3]:
+
+
+import stanfordnlp
+
+
+
+
+# In[4]:
+
+
+
+doc = nlp(tweets)
+
+
+
+# In[45]:
+
+
+
+doc.sentences[0].words[0].pos
+
+
+# In[11]:
+
+
+pos_dict = {
+'CC': 'coordinating conjunction','CD': 'cardinal digit','DT': 'determiner',
+'EX': 'existential there (like: \"there is\" ... think of it like \"there exists\")',
+'FW': 'foreign word','IN':  'preposition/subordinating conjunction','JJ': 'adjective \'big\'',
+'JJR': 'adjective, comparative \'bigger\'','JJS': 'adjective, superlative \'biggest\'',
+'LS': 'list marker 1)','MD': 'modal could, will','NN': 'noun, singular \'desk\'',
+'NNS': 'noun plural \'desks\'','NNP': 'proper noun, singular \'Harrison\'',
+'NNPS': 'proper noun, plural \'Americans\'','PDT': 'predeterminer \'all the kids\'',
+'POS': 'possessive ending parent\'s','PRP': 'personal pronoun I, he, she',
+'PRP$': 'possessive pronoun my, his, hers','RB': 'adverb very, silently,',
+'RBR': 'adverb, comparative better','RBS': 'adverb, superlative best',
+'RP': 'particle give up','TO': 'to go \'to\' the store.','UH': 'interjection errrrrrrrm',
+'VB': 'verb, base form take','VBD': 'verb, past tense took',
+'VBG': 'verb, gerund/present participle taking','VBN': 'verb, past participle taken',
+'VBP': 'verb, sing. present, non-3d take','VBZ': 'verb, 3rd person sing. present takes',
+'WDT': 'wh-determiner which','WP': 'wh-pronoun who, what','WP$': 'possessive wh-pronoun whose',
+'WRB': 'wh-abverb where, when','QF' : 'quantifier, bahut, thoda, kam (Hindi)','VM' : 'main verb',
+'PSP' : 'postposition, common in indian langs','DEM' : 'demonstrative, common in indian langs'
+}
+
+
+# In[72]:
+
+
+import pandas as pd
+def extract_pos(doc):
+    parsed_text = {'lemma':[], 'pos':[], 'exp':[]}
+    for sent in doc.sentences:
+        for wrd in sent.words:
+            if wrd.pos in pos_dict.keys():
+                pos_exp = wrd.pos
+                word_lemmea = wrd.lemma
+            else:
+                pos_exp = 'NA'
+                word_lemmea = "Na"
+            parsed_text['lemma'].append(word_lemmea)
+            parsed_text['pos'].append(pos_exp)
+            a = " ".join( parsed_text['lemma'])
+            b = " ".join( parsed_text['pos'])
+
+    return a,b
+    #extract pos
+a,b = extract_pos(doc)
+
+
+len(b)
+
+
+# In[5]:
+
+
+nlp = stanfordnlp.Pipeline(processors = "tokenize,mwt,lemma,pos")
+
+
+# In[47]:
+
+
+
+# Processing English text
+en_doc = en_nlp("2 things adults should take more seriou. who we create our children with")
+
+
+# In[44]:
+
+
+for i, sent in enumerate(en_doc.sentences):
+    print("[Sentence {}]".format(i+1))
+    for word in sent.words:
+        print(word.xpos)
+
+        print("")
+
+
+# In[8]:
+
+
+
+import re
+def preprocess(text):
+    text = text.lower()
+    text = re.sub(r"\.{3}", ".", text)
+    text = re.sub(",", " ", text)
+    text = re.sub(":", "", text)
+    text = re.sub("@ ", "@", text)
+    text = re.sub("# ", "#", text)
+    text = re.sub('\S*@\S*\s?', '', text)
+    text = re.sub(r"\"", "", text)
+    text = re.sub("\'", "", text)
+    text = re.sub(r"http\S+", "", text)
+    text = re.sub(r'\w*pic.twitter.co\w*', '', text)
+    text = re.sub(r'\w*twitter.co\w*', '', text)
+    text = re.sub(r'\w*twitter.com\w*', '', text)
+    text = re.sub(r"./\S+", "", text)
+    text = re.sub(r"@ \S+", "", text)
+    text = re.sub(r"#\S+", "", text)
+    text = re.sub(r'\n+', " ", text)
+    text = re.sub(r"<.*?>", "", text)
+    text = re.sub(r"<.*?>", "", text)
+    text = re.sub("co vid", "covid", text)
+    text = re.sub(r"\ss\s", " 's ", text)
+    text = re.sub(r"\sm\s", " 'm ", text)
+    text = re.sub(r"\sll\s", " 'll ", text)
+    text = re.sub(r"\st\s", " 't ", text)
+    text = re.sub(r"\sd\s", " 'd ", text)
+    text = re.sub(r"\svir\s", " virus ", text)
+    text = re.sub("rt", "", text)
+    text = re.sub(r"\s+", " ", text)
+    return text
+
+
+# In[11]:
+
+
+def contains_words(sent, words):
+    for w in words:
+        if w in sent:
+            return True
+    return False
+
+
+# In[28]:
+
+
+import jsonlines
+import json
+import os
+labeled = {}
+
+#Auto Label Students
+directory = '/Users/jonathanlai/PycharmProjects/Collegeornot/Collgege'
+c = 0
+for file_name in(os.listdir(directory)):
+    if file_name.endswith('.jsonl'):
+        name = file_name.split("_")[0].rstrip()
+        
+        #tweets = open("C:\\Users\\Jonathan Lai\\Downloads\\22172330__tweets.jsonl", 'r').readlines()
+        tweets = open(os.path.join(directory, file_name),'r').readlines()
+        labeled[name] = {}
+        tweets = [json.loads(t)['text'] for t in tweets]
+        tweets = ' '.join(tweets)
+        x = preprocess(tweets)
+        labeled[name]['label'] = 1
+        c = c+1
+        print(c)
+        labeled[name]['text'] = x
+        #if(contains_words(x,keywords)):
+         #   print('gg')
+          #  c = c+1
+           # labeled[name]['label'] = int(input())
+            #print(c)
+
+        #else:
+        if( c == 500) :
+                break
+         #   labeled[name]['label'] = 0
+
+
+print("done")
+
+
+# In[7]:
+
+
+print(len(labeled.keys()))
+
+
+# print(len(labeled)
+
+# In[13]:
+
+
+keywords = ['school','college','university','class','student',
+            'exam','phd','graduat','campus','test','final','midterm',
+            'major','semester','term','varsity', ' my ']
+
+
+# In[18]:
+
+
+import jsonlines 
+import json
+import wget
+import os
+import os
+import json
+from IPython.display import Image 
+from IPython.display import clear_output
+nonCollege = {}
+import tweepy
+directory = '/Users/jonathanlai/PycharmProjects/Collegeornot/user-timelines' 
+c = 0 
+label = 0
+for file_name in(os.listdir(directory)):
+    if file_name.endswith('.jsonl'): 
+        name = file_name.split("_")[0].rstrip()
+        tweets = open(os.path.join(directory, file_name),'r').readlines()
+      
+        tweets = [json.loads(t)['text'] for t in tweets]
+        for tweet in tweets:
+             x = preprocess(tweet)
+             if(contains_words(x,keywords)):
+                p = 0
+               
+                if( p == 0):
+                    api = client1.get_twitter_auth()
+                else:
+                    api = client2.get_twitter_auth()
+
+                
+                try:
+                    object1 = api.get_user(name)
+                except Exception as e:
+                
+                    print(e)
+                print(object1.screen_name ,'Name')
+                print(object1.id ,'id')
+                print(object1.id_str ,'id string')
+               
+                print(tweet)
+                print(object1.description,'Bio')
+                print(object1.followers_count,'Followers')
+                print(object1.friends_count,'Friends')
+                print(object1.url,'url')
+                print(object1.statuses_count,"Tweets")
+                
+                
+
+                urk = object1.profile_image_url_https
+
+                p = wget.download(urk)
+
+                profile_image = Image(filename =p)
+                display(profile_image)
+                
+                a = int(input())
+                break
+                    
+               
+                    
+                    
+               
+
+
+
+
+    
+    tweets = ' '.join(tweets)
+    x = preprocess(tweets)
+   
+    
+    if a=0 :
+       # doc = nlp(x)
+        #b,c = extract_pos(doc)
+        nonCollege[name] = {}
+        nonCollege[name]['text'] = x
+        nonCollege[name]['label'] = a
+        #nonCollege[name]['pos'] = c
+    if(len(nonCollege.keys()) ==500):
+        break
+    print(len(nonCollege.keys()))
+  
+    
+
+
+# In[103]:
+
+
+
+
+
+# keywords 
+
+# In[104]:
+
+
+import os
+import json
+from IPython.display import Image 
+from IPython.display import clear_output
+x = Image(filename = '/Users/jonathanlai/PycharmProjects/Introtopytorch/twitter cache/{}.jpg'.format('/53983_224x224'))
+
+
+# In[87]:
+
+
+api = client1.get_twitter_client()
+
+
+object1 = api.get_user("Barrack_Obama")
+
+
+# In[102]:
+
+
+import wget
+
+urk = object1.profile_image_url_https
+
+p = wget.download(urk)
+
+profile_image = Image(filename =p)
+display(profile_image)
+
+
+# In[16]:
+
+
+import sys
+from tweepy import API
+from tweepy import OAuthHandler
+class client1:
+    def get_twitter_auth():
+        try:
+
+
+
+            consumer_key = "yM04BiPisVVT1kdlWXHYyXOjM"
+            consumer_secret = "gWjUj2JzVXp4n7EUHB8Yh7C1RwJkswM3DxLHk4HYdzMfUHiuwX"
+            access_token = "736688330763567104-jfV3sNhYONIdZYpbVY16WpQ39gh9CkI"
+            access_secret = "CS9d81JV0paL3ToXaufb9Z583I2yx0MuGIfMTY6Hw97A1"
+        except KeyError:
+            sys.stderr.write("TWITTER_* environment variables not set\n")
+            sys.exit(1)
+        auth = OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_secret)
+        client = API(auth)
+
+        return client
+    def get_twitter_client():
+        auth = get_twitter_auth()
+        client = API(auth)
+
+        return client
+
+
+# In[97]:
+
+
+import sys
+from tweepy import API
+from tweepy import OAuthHandler
+class client2:
+    def get_twitter_auth():
+        try:
+
+
+
+            consumer_key = "gYNuhpyKCzPV53qeTFI9EQ19p"
+            consumer_secret = "lBSlVpc1ncpg3OWHYFL0SulbLkZ9sXS6p1AvJPAZgVcSbkiRta"
+            access_token = "1249848851156140032-0JVenb23eqh7sXvFdsGQHm5MxZ70cU"
+            access_secret = "iDVjHFOGnJkgI0nBgt2uC1h4lOxLHMom76q9zxxVZ9tuX"
+        except KeyError:
+            sys.stderr.write("TWITTER_* environment variables not set\n")
+            sys.exit(1)
+        auth = OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_secret)
+        client = API(auth)
+        return client
+
+    def get_twitter_client():
+        auth = get_twitter_auth()
+        client = API(auth)
+        return client
+
+
+# In[84]:
+
+
+import tweepy
+
+
+# In[142]:
+
+
+nonCollege['17080018']['label']
+
+
+# In[144]:
+
+
+for key in nonCollege.keys():
+    if nonCollege[key]['label'] == 1:
+        print(nonCollege[key]['label'])
+
+
+# In[10]:
+
+
+n_items = take(150,labeled.items())
+    
+    
+dict(n_items)
+
+
+# In[12]:
+
+
+from itertools import islice
+
+
+# In[27]:
+
+
+def take(n,iterable):
+    return list(islice(iterable,n))
+
+
+# In[160]:
+
+
+pp =dict(n_items)
+
+
+# In[ ]:
+
+
+z = {**pp,**nonCollege}
+
+
+# In[164]:
+
+
+import json
+with open('Nostudnet.json', 'w') as fp:
+    json.dump(pp, fp)
+
+
+# In[165]:
+
+
+import json
+with open('NotStudent.json', 'w') as fp:
+    json.dump(nonCollege, fp)
+
+
+# In[19]:
+
+
+import json
+with open('Student.json') as json_file: 
+        pp= json.load(json_file)
+with open('Nostudnet.json') as json_file: 
+        nonCollege= json.load(json_file)
+        
+        
+
+
+# In[20]:
+
+
+z = {**pp,**nonCollege}
+
+
+# In[22]:
+
+
+tweets = []
+
+labels = []
+for keys in z.keys():
+    tweets.append(z[keys]['text'])
+    labels.append(z[keys]['label'])
+    
+
+    
+    
+len(tweets)
+
+
+# In[23]:
+
+
+tweet_train, tweet_test, label_train, label_test = train_test_split(tweets,labels, test_size=0.2, random_state=42)
+
+
+# In[24]:
+
+
+bs_model = Pipeline(steps=[('bow', TfidfVectorizer(ngram_range=(1, 4), token_pattern=r'\b\w+\b', min_df=10)),
+                        ('feature_selection', SelectKBest(f_regression, k=200)),
+                        ('classifier', RandomForestClassifier(verbose=True, random_state=42))])
+
+bs_model
+
+
+# In[25]:
+
+
+
+
+bs_model.fit(tweet_train,label_train)
+
+bs_prediction = bs_model.predict(tweet_test)
+bs_prediction
+
+
+# In[26]:
+
+
+confusion_matrix(label_test,bs_prediction)
+
+
+# In[27]:
+
+
+prediction_arule = []
+
+for i in range(len(tweet_test)):
+    prediction_arule.append(max(predict_A_rule(tweet_test[i], filter_list), bs_prediction[i]))
+
+
+# In[23]:
+
+
+accuracy_score(label_test,prediction_arule)
+confusion_matrix(label_test,prediction_arule)
+
+
+# In[28]:
+
+
+listx = []
+for item in labeled.keys():
+    listx.append(labeled[item]['text'])
+
+
+# In[27]:
+
+
+bs_prediction = bs_model.predict(listx)
+bs_prediction
+
+
+# In[10]:
+
+
+import os
+directory = '/Users/jonathanlai/PycharmProjects/Collegeornot/user-timelines' 
+c = 0 
+label = 0
+for file_name in(os.listdir(directory)):
+    if file_name.endswith('.jsonl'): 
+        name = file_name.split("_")[0].rstrip()
+        tweets = open(os.path.join(directory, file_name),'r').readlines()
+      
+        tweets = [json.loads(t)['text'] for t in tweets]
+
+
+# In[29]:
+
+
+import os
+directory = '/Users/jonathanlai/PycharmProjects/Collegeornot/user-timelines' 
+c = 0 
+label = 0
+abc = []
+
+name1 = []
+for file_name in(os.listdir(directory)):
+    if file_name.endswith('.jsonl'): 
+        
+        tweets = open(os.path.join(directory, file_name),'r').readlines()
+        name = 
+        tweets = [json.loads(t)['text'] for t in tweets]
+        tweets = ' '.join(tweets)
+        x = preprocess(tweets)
+        abc.append(x)
+        name1.append(name)
+
+
+# In[30]:
+
+
+len(abc)
+
+
+# In[31]:
+
+
+Hello = bs_model.predict(abc)
+
+
+# In[88]:
+
+
+
+
+
+# In[82]:
+
+
+A = []
+
+for i in range(len(Hello)):
+    A.append(max(predict_A_rule(abc[i], filter_list), Hello[i]))
+    
+len(A)
+
+
+# In[86]:
+
+
+coount = 0 
+namelist = []
+for item in range(0,len(A)):
+    if A[item]== 1:
+        namelist.append(name1[item])
+        coount = coount+1
+
+
+# In[89]:
+
+
+with open('Namestuff.txt', 'w') as f:
+    for item in namelist:
+        f.write("%s\n" % item)
+
+
+# In[39]:
+
+
+dict1 = {}
+for item in range(len(abc)):
+    
+    dict1[name1[item]] = A[item]
+
+
+# In[73]:
+
+
+
+
+
+# In[58]:
+
+
+import pandas as pd
+df1 = pd.read_csv('/Users/jonathanlai/Downloads/CorrectFinalMaskOff.csv')
+len(df1)
+
+
+# In[42]:
+
+
+df1['College'] = "No_Prediction"
+
+
+# In[43]:
+
+
+count = 0 
+for key in dict1.keys():
+    count = count+1
+    print(count)
+    df1.loc[df1['id'] == key, ['College']] = dict1[key]
+    
+    
+
+
+# In[50]:
+
+
+Student = df1.loc[df1['College'] == 1]
+Non = df1.loc[df1['College'] == 0]
+
+Both = df1.loc[(df1['College'] == 1) | (df1['College'] == 0)]
+
+
+len(Non)
+
+
+# In[43]:
+
+
+np.mean(Student.score)
+
+
+# In[68]:
+
+
+Student.head()
+
+
+# In[94]:
+
+
+np.mean(Non.score)
+
+
+# In[60]:
+
+
+FemaleStudent = Student.loc[Student['gender'] == 'Female']
+
+MaleStudent = Student.loc[Student['gender'] == 'Male']
+
+
+# In[48]:
+
+
+lista = []
+listb = []
+listc = []
+listx = list(MaleStudent.date.unique())
+listx = [x for x in listx if str(x) != 'nan']
+
+
+print(listx)
+for x in range(0,len(listx)):
+   
+    if ('Mar') in listx[x]:
+       
+      lista.append(listx[x])
+    else:
+        listb.append(listx[x])
+#listy = list(New["Apr11"].groups.keys())
+lista.sort()
+listb.sort()
+listc.append(lista)
+listc.append(listb)
+
+flat_list = [item for sublist in listc for item in sublist]
+print(flat_list)
+
+listx.sort()
+
+listx
+
+
+# In[ ]:
+
+
+
+df3 = MaleStudent
+for item in flat_list: ##Flat_list is just all the dates in order
+    x = np.mean(df3[df3['date'] == item].score)
+    x1.append(x)
+x = list(range(0,len(flat_list)))
+plt.xticks(x, flat_list, rotation='vertical')
+
+
+plot = plt.bar(flat_list,x1)
+
+plot[6].set_color('r')
+plot[7].set_color('r')
+
+
+
+plot[13].set_color('r')
+plot[14].set_color('r')
+
+
+
+
+plot[20].set_color('r')
+plot[21].set_color('r')
+
+plt.title(">40")
+
+
+# In[44]:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import scipy
+from scipy import stats
+scipy.stats.ranksums(FemaleStudent.score,MaleStudent.score)
+#print(scipy.stats.ranksums(Student.score,Non.score))
+
+
+# In[65]:
+
+
+len(MaleStudent)
+
+
+# In[63]:
+
+
+np.mean(FemaleStudent.score)
+
+
+# In[64]:
+
+
+np.mean(MaleStudent.score)
+
+
+# In[69]:
+
+
+L = "male",'female'
+
+
+# In[70]:
+
+
+
+sizes = [345,329]
+
+explode = (0,.1)
+
+
+# In[71]:
+
+
+fig1, ax1 = plt.subplots()
+ax1.pie(sizes,explode =  explode,labels=L, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+
+
+# In[55]:
+
+
+Young = (Student.loc[Student['age'] == '<=18'])
+Middle =Student.loc[Student['age'] == '19-29']
+Old =  Student.loc[Student['age'] == '30-39']
+Realold =  Student.loc[Student['age'] == '>40']
+
+
+print(np.mean(Young.score))
+print(np.mean(Middle.score))
+print(np.mean(Old.score))
+print(np.mean(Realold.score))
+
+
+Dates = Student.date.unique()
+
+
+
+# In[56]:
+
+
+sizes = [len(Young),len(Middle),len(Old),len(Realold)]
+L =  '<=18', '19-29' , '30-39', '>=40'
+
+
+# In[57]:
+
+
+fig1, ax1 = plt.subplots()
+ax1.pie(sizes,labels=L, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+
+
+# In[ ]:
+
+
+
+
