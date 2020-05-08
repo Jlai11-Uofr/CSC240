@@ -8,15 +8,36 @@ import re
 import bigjson
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import pandas as pd
+import re
+from nltk.tokenize import word_tokenize
+from string import punctuation
+from nltk.corpus import stopwords
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from spellchecker import SpellChecker
+import nltk
+
+import pandas as pd
+import numpy as np
 
 #Basic imports
 ##We also need to process the tweet
 def _processTweet(tweet):
+    spell = SpellChecker()
     tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))', 'URL', tweet)  # remove URLs
     tweet = re.sub('@[^\s]+', 'AT_USER', tweet)  # remove usernames
     tweet = re.sub(r'#([^\s]+)', r'\1', tweet)  # remove the # in #hashtag
-    # tweet = word_tokenize(tweet)  # remove repeated characters (helloooooooo into hello)
-    return tweet
+    pattern = re.compile(r"(.)\1{2,}")
+    tweet = pattern.sub(r"\1\1", tweet)
+    tweet = word_tokenize(tweet)
+
+    misspelled = spell.unknown(tweet)
+
+    for word in misspelled:
+        tweet = [spell.correction((word)) if x == word else x for x in tweet]
+    String= ''
+    for item in tweet:
+        String = String+item+" "
+    return String
 
 time1 = time.time()
 m3twitter=M3Twitter(cache_dir='twitter cache') #Change the cache_dir parameter to control where profile images are downloaded
