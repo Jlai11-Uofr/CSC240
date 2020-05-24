@@ -1,7 +1,8 @@
 # FaceOff-Polarzing-Opinions-on-use-of-Masks-
 
 
-Code behind the Paper Face-Off. Full Paper is in Repo!
+Code behind the Paper Face-Off.
+https://drive.google.com/file/d/1oF_709hvMBwttI9383xCbqHrZRpJdn9D/view?usp=sharing
 FaceOff.pdf
 
 In order to run this. Please obtain your own Twitter API Keys from https://developer.twitter.com/en/docs/basics/authentication/oauth-1-0a/obtaining-user-access-tokens
